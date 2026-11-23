@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Дневник фильмов</title>
+<style>
+:root{--bg:#faf7f2;--card:#fff;--tx:#241f1a;--mu:#7a7168;--ac:#b4472d;--ln:#e8e1d6;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1a1714;--card:#25211d;--tx:#f0ebe3;--mu:#9d9388;--ac:#e8785a;--ln:#38322b;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1a1714;--card:#25211d;--tx:#f0ebe3;--mu:#9d9388;--ac:#e8785a;--ln:#38322b;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,Segoe UI,sans-serif;max-width:760px;margin:0 auto;padding:12px 14px 90px}
+h1{font:600 24px Georgia,serif;margin:6px 0 2px}.top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}.mini{display:flex;gap:4px;margin-top:6px}.mini button{width:30px;height:30px;padding:0;border:1px solid var(--ln);background:var(--card);color:var(--mu);border-radius:8px;font-size:14px}.sub{color:var(--mu);font-size:13px;margin-bottom:12px}
+.tabs{display:flex;gap:6px;margin:10px 0;overflow-x:auto}
+.tabs button{flex:none;border:1px solid var(--ln);background:var(--card);color:var(--tx);padding:8px 14px;border-radius:20px;font-size:14px}
+.tabs button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+input,select{width:100%;padding:11px;border:1px solid var(--ln);border-radius:10px;background:var(--card);color:var(--tx);font-size:16px;margin-bottom:8px}
+.row{display:grid;grid-template-columns:1fr 90px;gap:8px}
+.grp{font:600 18px Georgia,serif;margin:18px 0 6px;color:var(--ac);display:flex;justify-content:space-between}.grp small{color:var(--mu);font:13px system-ui}
+.m{background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:10px 12px;margin-bottom:6px;cursor:pointer}
+.m b{display:block}.m span{color:var(--mu);font-size:13px}
+.th{display:flex;gap:5px;margin-top:6px;overflow-x:auto}.th img{height:54px;width:54px;object-fit:cover;border-radius:8px}
+.fab{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--ac);color:#fff;border:0;width:58px;height:58px;border-radius:50%;font-size:30px;box-shadow:0 4px 14px #0004}
+.ov{position:fixed;inset:0;background:#0007;display:none;align-items:flex-end;justify-content:center;z-index:5}.ov.on{display:flex}
+.sheet{background:var(--bg);width:100%;max-width:560px;max-height:92%;overflow:auto;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.btn{border:0;border-radius:10px;padding:12px 16px;font-size:16px;background:var(--ac);color:#fff}.btn.g{background:var(--card);color:var(--tx);border:1px solid var(--ln)}.btn.d{background:none;color:#c0392b}
+.imgs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.imgs div{position:relative}.imgs img{width:84px;height:84px;object-fit:cover;border-radius:8px}
+.imgs i{position:absolute;top:-6px;right:-6px;background:#000b;color:#fff;border-radius:50%;width:22px;height:22px;text-align:center;font-style:normal;line-height:22px}
+.st{font-size:12px;color:var(--mu)}.empty{color:var(--mu);text-align:center;margin:40px 0}
+#lb{z-index:9;align-items:center}#lb img{max-width:96%;max-height:90%}
+</style></head><body>
+<div class="top"><h1>🎬 Дневник фильмов</h1><div class="mini"><button id="exp" title="Сохранить копию">💾</button><button id="imp" title="Загрузить копию">⬇</button></div></div>
+<div class="sub" id="st">Загрузка…</div>
+<input type="file" id="impf" accept=".json,application/json" hidden>
+<input id="q" placeholder="Поиск по названию, режиссёру, жанру">
+<div class="tabs" id="tabs">
+<button data-t="log" class="on">Журнал</button><button data-t="year">По годам</button><button data-t="dir">По режиссёрам</button><button data-t="genre">По жанрам</button>
+</div>
+<div id="list"></div>
+<button class="fab" id="add">+</button>
+
+<div class="ov" id="ov"><div class="sheet">
+<h2 id="ft" style="margin:0 0 10px;font-family:Georgia,serif">Новый фильм</h2>
+<input id="f_title" placeholder="Название">
+<div class="row"><input id="f_dir" placeholder="Режиссёр"><input id="f_year" placeholder="Год" inputmode="numeric" maxlength="4"></div>
+<input id="f_genre" placeholder="Жанр" list="gl"><datalist id="gl"></datalist>
+<div class="imgs" id="imgs"></div>
+<input type="file" id="file" accept="image/*" multiple hidden>
+<button class="btn g" id="pick" style="width:100%;margin-bottom:12px">📷 Прикрепить картинку</button>
+<div style="display:flex;gap:8px"><button class="btn" id="save" style="flex:1">Сохранить</button><button class="btn g" id="cancel">Отмена</button></div>
+<button class="btn d" id="del" style="width:100%;margin-top:8px;display:none">Удалить запись</button>
+</div></div>
+<div class="ov" id="lb"><img id="lbi"></div>
+
+<script>
+let movies=[],tab="log",editing=null,pics=[],idb=null;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const live=()=>movies.filter(m=>!m.deleted);
+
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open("movielog",1);
+  r.onupgradeneeded=()=>r.result.createObjectStore("m",{keyPath:"id"});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+const tx=(mode,fn)=>new Promise((res,rej)=>{const t=idb.transaction("m",mode),st=t.objectStore("m"),rq=fn(st);t.oncomplete=()=>res(rq&&rq.result);t.onerror=()=>rej(t.error)});
+const dbAll=()=>tx("readonly",s=>s.getAll());
+const dbPut=m=>tx("readwrite",s=>s.put(m));
+
+function status(){$("st").textContent="Хранится на этом устройстве · "+live().length+" фильмов"}
+async function init(){
+  try{idb=await openDB();movies=await dbAll();status()}
+  catch(e){$("st").textContent="⚠️ Браузер не даёт сохранять данные (приватный режим?)"}
+  render();
+}
+function upsert(m){const i=movies.findIndex(x=>x.id===m.id);if(i<0)movies.push(m);else movies[i]=m}
+
+function render(){
+  const q=$("q").value.trim().toLowerCase();
+  let a=live().filter(m=>!q||[m.title,m.director,m.genre,m.year].join(" ").toLowerCase().includes(q));
+  const el=$("list");
+  if(!a.length){el.innerHTML='<div class="empty">'+(live().length?"Ничего не найдено":"Пока пусто. Нажмите + и добавьте первый фильм")+"</div>";fillGenres();return}
+  const card=m=>`<div class="m" data-id="${esc(m.id)}"><b>${esc(m.title)}</b><span>${esc(m.year||"—")} · ${esc(m.director||"—")} · ${esc(m.genre||"—")}</span>${(m.images||[]).length?'<div class="th">'+m.images.map(s=>`<img src="${esc(s)}">`).join("")+"</div>":""}</div>`;
+  let h="";
+  if(tab==="log"){a=[...a].sort((x,y)=>(y.added||0)-(x.added||0));h=a.map(card).join("")}
+  else{
+    const key={year:m=>m.year||"Без года",dir:m=>m.director||"Без режиссёра",genre:m=>m.genre||"Без жанра"}[tab];
+    const g={};a.forEach(m=>(g[key(m)]??=[]).push(m));
+    const ks=Object.keys(g).sort((x,y)=>tab==="year"?(+x||9999)-(+y||9999):x.localeCompare(y,"ru"));
+    h=ks.map(k=>{const it=g[k].sort((x,y)=>tab==="year"?(x.title||"").localeCompare(y.title||"","ru"):(x.year||9999)-(y.year||9999));
+      return `<div class="grp">${esc(k)}<small>${it.length}</small></div>`+it.map(card).join("")}).join("");
+  }
+  el.innerHTML=h;fillGenres();
+}
+function fillGenres(){$("gl").innerHTML=[...new Set(live().map(m=>m.genre).filter(Boolean))].map(g=>`<option value="${esc(g)}">`).join("")}
+function renderImgs(){$("imgs").innerHTML=pics.map((s,i)=>`<div><img src="${esc(s)}" data-v="${i}"><i data-x="${i}">×</i></div>`).join("")}
+function openForm(m){
+  editing=m||null;pics=[...(m?.images||[])];
+  $("ft").textContent=m?"Редактировать":"Новый фильм";
+  $("f_title").value=m?.title||"";$("f_dir").value=m?.director||"";$("f_year").value=m?.year||"";$("f_genre").value=m?.genre||"";
+  $("del").style.display=m?"block":"none";renderImgs();$("ov").classList.add("on");
+}
+const closeForm=()=>$("ov").classList.remove("on");
+function shrink(file){return new Promise(res=>{const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{
+  const k=Math.min(1,900/Math.max(i.width,i.height)),c=document.createElement("canvas");
+  c.width=Math.round(i.width*k);c.height=Math.round(i.height*k);c.getContext("2d").drawImage(i,0,0,c.width,c.height);
+  res(c.toDataURL("image/jpeg",.72))};i.onerror=()=>res(null);i.src=r.result};r.onerror=()=>res(null);r.readAsDataURL(file)})}
+$("pick").onclick=()=>$("file").click();
+$("file").onchange=async e=>{for(const f of e.target.files){if(pics.length>=8){alert("Максимум 8 картинок на фильм");break}const s=await shrink(f);if(s)pics.push(s)}e.target.value="";renderImgs()};
+$("imgs").onclick=e=>{if(e.target.dataset.x!==undefined){pics.splice(+e.target.dataset.x,1);renderImgs()}else if(e.target.dataset.v!==undefined){$("lbi").src=pics[+e.target.dataset.v];$("lb").classList.add("on")}};
+$("lb").onclick=()=>$("lb").classList.remove("on");
+
+$("save").onclick=async()=>{
+  const title=$("f_title").value.trim();if(!title){$("f_title").focus();return}
+  const id=editing?.id||("m"+Date.now().toString(36)+Math.random().toString(36).slice(2,5));
+  const m={id,title,director:$("f_dir").value.trim(),year:$("f_year").value.replace(/\D/g,"").slice(0,4),genre:$("f_genre").value.trim(),images:pics,added:editing?.added||Date.now(),upd:Date.now()};
+  try{await dbPut(m);upsert(m);status();render();closeForm()}catch(e){alert("Не удалось сохранить: "+(e.message||e))}
+};
+$("del").onclick=async()=>{
+  if(!editing||!confirm("Удалить «"+editing.title+"»?"))return;
+  const m={id:editing.id,deleted:true,upd:Date.now()};
+  try{await dbPut(m);upsert(m);status();render();closeForm()}catch(e){alert("Не удалось удалить")}
+};
+$("cancel").onclick=closeForm;$("add").onclick=()=>openForm();$("q").oninput=render;
+$("tabs").onclick=e=>{const t=e.target.dataset.t;if(!t)return;tab=t;[...$("tabs").children].forEach(b=>b.classList.toggle("on",b===e.target));render()};
+$("list").onclick=e=>{const c=e.target.closest(".m");if(!c)return;
+  if(e.target.tagName==="IMG"){$("lbi").src=e.target.src;$("lb").classList.add("on");return}
+  openForm(movies.find(m=>m.id===c.dataset.id))};
+
+// Копия / синхронизация между устройствами
+$("exp").onclick=async()=>{
+  const name="filmy-"+new Date().toISOString().slice(0,10)+".json";
+  const file=new File([JSON.stringify({v:1,movies})],name,{type:"application/json"});
+  try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file]});return}}catch(e){if(e.name==="AbortError")return}
+  const a=document.createElement("a");a.href=URL.createObjectURL(file);a.download=name;document.body.appendChild(a);a.click();a.remove();
+};
+$("imp").onclick=()=>$("impf").click();
+$("impf").onchange=async e=>{
+  const f=e.target.files[0];e.target.value="";if(!f)return;
+  try{
+    const d=JSON.parse(await f.text());if(!Array.isArray(d.movies))throw 0;
+    let n=0;
+    for(const m of d.movies){const cur=movies.find(x=>x.id===m.id);if(!cur||(m.upd||0)>(cur.upd||0)){await dbPut(m);upsert(m);n++}}
+    status();render();alert("Готово. Добавлено или обновлено записей: "+n);
+  }catch(err){alert("Не получилось прочитать файл копии")}
+};
+init();
+</script></body></html>
