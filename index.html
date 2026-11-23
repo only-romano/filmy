@@ -8,7 +8,7 @@
 :root[data-theme="dark"]{--bg:#1a1714;--card:#25211d;--tx:#f0ebe3;--mu:#9d9388;--ac:#e8785a;--ln:#38322b;color-scheme:dark}
 *{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,Segoe UI,sans-serif;max-width:760px;margin:0 auto;padding:12px 14px 90px}
-h1{font:600 24px Georgia,serif;margin:6px 0 2px}.top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}.mini{display:flex;gap:4px;margin-top:6px}.mini button{width:30px;height:30px;padding:0;border:1px solid var(--ln);background:var(--card);color:var(--mu);border-radius:8px;font-size:14px}.sub{color:var(--mu);font-size:13px;margin-bottom:12px}
+h1{text-transform:uppercase;letter-spacing:.06em;font:600 22px Georgia,serif;margin:6px 0 2px}.top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}.mini{display:flex;gap:4px;margin-top:6px}.mini button{width:30px;height:30px;padding:0;border:1px solid var(--ln);background:var(--card);color:var(--mu);border-radius:8px;font-size:14px}.hrt{color:var(--tx);font-weight:400}.sub{color:var(--mu);font-size:13px;margin-bottom:12px}
 .tabs{display:flex;gap:6px;margin:10px 0;overflow-x:auto}
 .tabs button{flex:none;border:1px solid var(--ln);background:var(--card);color:var(--tx);padding:8px 14px;border-radius:20px;font-size:14px}
 .tabs button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
@@ -32,7 +32,7 @@ input,select{width:100%;padding:11px;border:1px solid var(--ln);border-radius:10
 <input type="file" id="impf" accept=".json,application/json" hidden>
 <input id="q" placeholder="Поиск по названию, режиссёру, жанру">
 <div class="tabs" id="tabs">
-<button data-t="log" class="on">Журнал</button><button data-t="year">По годам</button><button data-t="dir">По режиссёрам</button><button data-t="genre">По жанрам</button>
+<button data-t="log" class="on">Журнал</button><button data-t="year">По годам</button><button data-t="dir">По режиссёрам</button><button data-t="fav">♡︎ Любимые</button>
 </div>
 <div id="list"></div>
 <button class="fab" id="add">+</button>
@@ -41,7 +41,7 @@ input,select{width:100%;padding:11px;border:1px solid var(--ln);border-radius:10
 <h2 id="ft" style="margin:0 0 10px;font-family:Georgia,serif">Новый фильм</h2>
 <input id="f_title" placeholder="Название">
 <div class="row"><input id="f_dir" placeholder="Режиссёр"><input id="f_year" placeholder="Год" inputmode="numeric" maxlength="4"></div>
-<input id="f_genre" placeholder="Жанр" list="gl"><datalist id="gl"></datalist>
+<button type="button" class="btn g" id="f_fav" style="width:100%;margin-bottom:8px">♡︎ Любимый</button>
 <div class="imgs" id="imgs"></div>
 <input type="file" id="file" accept="image/*" multiple hidden>
 <button class="btn g" id="pick" style="width:100%;margin-bottom:12px">📷 Прикрепить картинку</button>
@@ -51,7 +51,7 @@ input,select{width:100%;padding:11px;border:1px solid var(--ln);border-radius:10
 <div class="ov" id="lb"><img id="lbi"></div>
 
 <script>
-let movies=[],tab="log",editing=null,pics=[],idb=null;
+let movies=[],favState=false,tab="log",editing=null,pics=[],idb=null;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const live=()=>movies.filter(m=>!m.deleted);
@@ -72,27 +72,27 @@ function upsert(m){const i=movies.findIndex(x=>x.id===m.id);if(i<0)movies.push(m
 
 function render(){
   const q=$("q").value.trim().toLowerCase();
-  let a=live().filter(m=>!q||[m.title,m.director,m.genre,m.year].join(" ").toLowerCase().includes(q));
+  let a=live().filter(m=>(tab!=="fav"||m.fav)&&(!q||[m.title,m.director,m.year].join(" ").toLowerCase().includes(q)));
   const el=$("list");
-  if(!a.length){el.innerHTML='<div class="empty">'+(live().length?"Ничего не найдено":"Пока пусто. Нажмите + и добавьте первый фильм")+"</div>";fillGenres();return}
-  const card=m=>`<div class="m" data-id="${esc(m.id)}"><b>${esc(m.title)}</b><span>${esc(m.year||"—")} · ${esc(m.director||"—")} · ${esc(m.genre||"—")}</span>${(m.images||[]).length?'<div class="th">'+m.images.map(s=>`<img src="${esc(s)}">`).join("")+"</div>":""}</div>`;
+  if(!a.length){el.innerHTML='<div class="empty">'+(live().length?(tab==="fav"&&!q?"Пока нет любимых. Откройте фильм и нажмите ♡︎":"Ничего не найдено"):"Пока пусто. Нажмите + и добавьте первый фильм")+"</div>";return}
+  const card=m=>`<div class="m" data-id="${esc(m.id)}"><b>${m.fav?'<span class="hrt">♡︎</span> ':""}${esc(m.title)}</b><span>${esc(m.year||"—")} · ${esc(m.director||"—")}</span>${(m.images||[]).length?'<div class="th">'+m.images.map(s=>`<img src="${esc(s)}">`).join("")+"</div>":""}</div>`;
   let h="";
-  if(tab==="log"){a=[...a].sort((x,y)=>(y.added||0)-(x.added||0));h=a.map(card).join("")}
+  if(tab==="log"||tab==="fav"){a=[...a].sort((x,y)=>(y.added||0)-(x.added||0));h=a.map(card).join("")}
   else{
-    const key={year:m=>m.year||"Без года",dir:m=>m.director||"Без режиссёра",genre:m=>m.genre||"Без жанра"}[tab];
+    const key={year:m=>m.year||"Без года",dir:m=>m.director||"Без режиссёра"}[tab];
     const g={};a.forEach(m=>(g[key(m)]??=[]).push(m));
     const ks=Object.keys(g).sort((x,y)=>tab==="year"?(+x||9999)-(+y||9999):x.localeCompare(y,"ru"));
     h=ks.map(k=>{const it=g[k].sort((x,y)=>tab==="year"?(x.title||"").localeCompare(y.title||"","ru"):(x.year||9999)-(y.year||9999));
       return `<div class="grp">${esc(k)}<small>${it.length}</small></div>`+it.map(card).join("")}).join("");
   }
-  el.innerHTML=h;fillGenres();
+  el.innerHTML=h;
 }
-function fillGenres(){$("gl").innerHTML=[...new Set(live().map(m=>m.genre).filter(Boolean))].map(g=>`<option value="${esc(g)}">`).join("")}
 function renderImgs(){$("imgs").innerHTML=pics.map((s,i)=>`<div><img src="${esc(s)}" data-v="${i}"><i data-x="${i}">×</i></div>`).join("")}
+function setFav(){const b=$("f_fav");b.textContent="♡︎ Любимый";b.style.background=favState?"var(--tx)":"";b.style.color=favState?"var(--bg)":""}
 function openForm(m){
   editing=m||null;pics=[...(m?.images||[])];
   $("ft").textContent=m?"Редактировать":"Новый фильм";
-  $("f_title").value=m?.title||"";$("f_dir").value=m?.director||"";$("f_year").value=m?.year||"";$("f_genre").value=m?.genre||"";
+  $("f_title").value=m?.title||"";$("f_dir").value=m?.director||"";$("f_year").value=m?.year||"";favState=!!m?.fav;setFav();
   $("del").style.display=m?"block":"none";renderImgs();$("ov").classList.add("on");
 }
 const closeForm=()=>$("ov").classList.remove("on");
@@ -108,7 +108,7 @@ $("lb").onclick=()=>$("lb").classList.remove("on");
 $("save").onclick=async()=>{
   const title=$("f_title").value.trim();if(!title){$("f_title").focus();return}
   const id=editing?.id||("m"+Date.now().toString(36)+Math.random().toString(36).slice(2,5));
-  const m={id,title,director:$("f_dir").value.trim(),year:$("f_year").value.replace(/\D/g,"").slice(0,4),genre:$("f_genre").value.trim(),images:pics,added:editing?.added||Date.now(),upd:Date.now()};
+  const m={...(editing||{}),id,title,director:$("f_dir").value.trim(),year:$("f_year").value.replace(/\D/g,"").slice(0,4),fav:favState,images:pics,added:editing?.added||Date.now(),upd:Date.now()};
   try{await dbPut(m);upsert(m);status();render();closeForm()}catch(e){alert("Не удалось сохранить: "+(e.message||e))}
 };
 $("del").onclick=async()=>{
@@ -116,6 +116,7 @@ $("del").onclick=async()=>{
   const m={id:editing.id,deleted:true,upd:Date.now()};
   try{await dbPut(m);upsert(m);status();render();closeForm()}catch(e){alert("Не удалось удалить")}
 };
+$("f_fav").onclick=()=>{favState=!favState;setFav()};
 $("cancel").onclick=closeForm;$("add").onclick=()=>openForm();$("q").oninput=render;
 $("tabs").onclick=e=>{const t=e.target.dataset.t;if(!t)return;tab=t;[...$("tabs").children].forEach(b=>b.classList.toggle("on",b===e.target));render()};
 $("list").onclick=e=>{const c=e.target.closest(".m");if(!c)return;
