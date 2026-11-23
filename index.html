@@ -19,8 +19,8 @@ h1{text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;font:700 cla
 input,select{width:100%;padding:11px;border:1px solid var(--ln);border-radius:10px;background:var(--card);color:var(--tx);font-size:16px;margin-bottom:8px}
 .row{display:grid;grid-template-columns:1fr 90px;gap:8px}
 .grp{font:600 18px Georgia,serif;margin:18px 0 6px;color:var(--ac);display:flex;justify-content:space-between}.grp small{color:var(--mu);font:13px system-ui}
-.m{background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:10px 12px;margin-bottom:6px;cursor:pointer}
-.m b{display:block;text-transform:uppercase}#f_title{text-transform:uppercase}.m span{color:var(--mu);font-size:13px}
+.m{position:relative;background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:10px 12px;margin-bottom:6px;cursor:pointer}
+.m b{display:block;text-transform:uppercase}#f_title{text-transform:uppercase}.m span{color:var(--mu);font-size:13px}.m b{padding-right:36px}.m .hrt{position:absolute;right:12px;top:6px;font-size:28px;line-height:1;color:var(--tx)}.sug{position:absolute;left:0;right:0;top:100%;margin-top:-6px;background:var(--card);border:1px solid var(--ln);border-radius:10px;z-index:3;display:none;box-shadow:0 6px 16px #0003;max-height:180px;overflow:auto}.sug div{padding:11px 12px;border-bottom:1px solid var(--ln)}.sug div:last-child{border:0}
 .th{display:flex;gap:5px;margin-top:6px;overflow-x:auto}.th img{height:54px;width:54px;object-fit:cover;border-radius:8px}
 .fab{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--ac);color:#fff;border:0;width:58px;height:58px;border-radius:50%;font-size:30px;box-shadow:0 4px 14px #0004}
 .ov{position:fixed;inset:0;background:#0007;display:none;align-items:flex-end;justify-content:center;z-index:5}.ov.on{display:flex}
@@ -44,7 +44,7 @@ input,select{width:100%;padding:11px;border:1px solid var(--ln);border-radius:10
 <div class="ov" id="ov"><div class="sheet">
 <h2 id="ft" style="margin:0 0 10px;font-family:Georgia,serif">Новый фильм</h2>
 <input id="f_title" placeholder="Название">
-<div class="row"><input id="f_dir" placeholder="Режиссёр"><input id="f_year" placeholder="Год" inputmode="numeric" maxlength="4"></div>
+<div class="row"><div style="position:relative"><input id="f_dir" placeholder="Режиссёр" autocomplete="off"><div class="sug" id="dsug"></div></div><input id="f_year" placeholder="Год" inputmode="numeric" maxlength="4"></div>
 <button type="button" class="btn g" id="f_fav" style="width:100%;margin-bottom:8px">♡︎ Любимый</button>
 <div class="imgs" id="imgs"></div>
 <input type="file" id="file" accept="image/*" multiple hidden>
@@ -79,7 +79,7 @@ function render(){
   let a=live().filter(m=>(tab!=="fav"||m.fav)&&(!q||[m.title,m.director,m.year].join(" ").toLowerCase().includes(q)));
   const el=$("list");
   if(!a.length){el.innerHTML='<div class="empty">'+(live().length?(tab==="fav"&&!q?"Пока нет любимых. Откройте фильм и нажмите ♡︎":"Ничего не найдено"):"Пока пусто. Нажмите + и добавьте первый фильм")+"</div>";return}
-  const card=m=>`<div class="m" data-id="${esc(m.id)}"><b>${m.fav?'<span class="hrt">♡︎</span> ':""}${esc(m.title)}</b><span>${esc(m.year||"—")} · ${esc(m.director||"—")}</span>${(m.images||[]).length?'<div class="th">'+m.images.map(s=>`<img src="${esc(s)}">`).join("")+"</div>":""}</div>`;
+  const card=m=>`<div class="m" data-id="${esc(m.id)}"><b>${esc(m.title)}</b><span>${esc(m.year||"—")} · ${esc(m.director||"—")}</span>${m.fav?'<span class="hrt">♡︎</span>':""}${(m.images||[]).length?'<div class="th">'+m.images.map(s=>`<img src="${esc(s)}">`).join("")+"</div>":""}</div>`;
   let h="";
   if(tab==="log"||tab==="fav"){a=[...a].sort((x,y)=>(y.added||0)-(x.added||0));h=a.map(card).join("")}
   else{
@@ -96,7 +96,7 @@ function setFav(){const b=$("f_fav");b.textContent="♡︎ Любимый";b.sty
 function openForm(m){
   editing=m||null;pics=[...(m?.images||[])];
   $("ft").textContent=m?"Редактировать":"Новый фильм";
-  $("f_title").value=m?.title||"";$("f_dir").value=m?.director||"";$("f_year").value=m?.year||"";favState=!!m?.fav;setFav();
+  $("f_title").value=m?.title||"";$("f_dir").value=m?.director||"";$("dsug").style.display="none";$("f_year").value=m?.year||"";favState=!!m?.fav;setFav();
   $("del").style.display=m?"block":"none";renderImgs();$("ov").classList.add("on");
 }
 const closeForm=()=>$("ov").classList.remove("on");
@@ -120,6 +120,13 @@ $("del").onclick=async()=>{
   const m={id:editing.id,deleted:true,upd:Date.now()};
   try{await dbPut(m);upsert(m);status();render();closeForm()}catch(e){alert("Не удалось удалить")}
 };
+function directors(){const c={};live().forEach(m=>{const d=(m.director||"").trim();if(d){const k=d.toLowerCase();(c[k]??={n:d,c:0}).c++}});return Object.values(c).sort((a,b)=>b.c-a.c||a.n.localeCompare(b.n,"ru"))}
+function sugShow(){const v=$("f_dir").value.trim().toLowerCase(),b=$("dsug");
+  const hit=n=>{n=n.toLowerCase();if(n===v)return 0;if(n.startsWith(v))return 1;for(let i=1;i<n.length;i++)if(/[\s\-.]/.test(n[i-1])&&n.startsWith(v,i))return 2;return 0};
+  const r=v?directors().map(d=>({d,h:hit(d.n)})).filter(x=>x.h).sort((x,y)=>x.h-y.h).map(x=>x.d).slice(0,6):[];
+  b.innerHTML=r.map(d=>`<div data-n="${esc(d.n)}">${esc(d.n)}</div>`).join("");b.style.display=r.length?"block":"none"}
+$("f_dir").oninput=sugShow;$("f_dir").onblur=()=>setTimeout(()=>$("dsug").style.display="none",150);
+$("dsug").addEventListener("pointerdown",e=>{const n=e.target.dataset.n;if(!n)return;e.preventDefault();$("f_dir").value=n;$("dsug").style.display="none"});
 $("f_fav").onclick=()=>{favState=!favState;setFav()};
 $("cancel").onclick=closeForm;$("add").onclick=()=>openForm();$("q").oninput=render;
 $("tabs").onclick=e=>{const t=e.target.dataset.t;if(!t)return;tab=t;[...$("tabs").children].forEach(b=>b.classList.toggle("on",b===e.target));render()};
