@@ -8,7 +8,7 @@
 :root[data-theme="dark"]{--bg:#1a1714;--card:#25211d;--tx:#f0ebe3;--mu:#9d9388;--ac:#e8785a;--ln:#38322b;color-scheme:dark}
 *{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,Segoe UI,sans-serif;max-width:760px;margin:0 auto;padding:12px 14px 90px}
-h1{text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;font:600 clamp(15px,4.6vw,22px) Georgia,serif;margin:6px 0 2px}.top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}.mini{display:flex;gap:4px;margin-top:6px}.mini button{width:30px;height:30px;padding:0;border:1px solid var(--ln);background:var(--card);color:var(--mu);border-radius:8px;font-size:14px}.hrt{color:var(--tx);font-weight:400}.sub{color:var(--mu);font-size:13px;margin-bottom:12px}
+h1{text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;font:700 clamp(15px,4.4vw,22px) system-ui,-apple-system,"Segoe UI",sans-serif;margin:6px 0 2px}.top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}.mini{display:flex;gap:4px;margin-top:6px}.mini button{width:30px;height:30px;padding:0;border:1px solid var(--ln);background:var(--card);color:var(--mu);border-radius:8px;font-size:14px}.hrt{color:var(--tx);font-weight:400}.sub{color:var(--mu);font-size:13px;margin-bottom:12px}
 .tabs{display:flex;gap:6px;margin:10px 0;overflow-x:auto}
 .tabs button{flex:none;border:1px solid var(--ln);background:var(--card);color:var(--tx);padding:8px 14px;border-radius:20px;font-size:14px}
 .tabs button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
@@ -16,7 +16,7 @@ input,select{width:100%;padding:11px;border:1px solid var(--ln);border-radius:10
 .row{display:grid;grid-template-columns:1fr 90px;gap:8px}
 .grp{font:600 18px Georgia,serif;margin:18px 0 6px;color:var(--ac);display:flex;justify-content:space-between}.grp small{color:var(--mu);font:13px system-ui}
 .m{background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:10px 12px;margin-bottom:6px;cursor:pointer}
-.m b{display:block}.m span{color:var(--mu);font-size:13px}
+.m b{display:block;text-transform:uppercase}#f_title{text-transform:uppercase}.m span{color:var(--mu);font-size:13px}
 .th{display:flex;gap:5px;margin-top:6px;overflow-x:auto}.th img{height:54px;width:54px;object-fit:cover;border-radius:8px}
 .fab{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--ac);color:#fff;border:0;width:58px;height:58px;border-radius:50%;font-size:30px;box-shadow:0 4px 14px #0004}
 .ov{position:fixed;inset:0;background:#0007;display:none;align-items:flex-end;justify-content:center;z-index:5}.ov.on{display:flex}
@@ -106,7 +106,7 @@ $("imgs").onclick=e=>{if(e.target.dataset.x!==undefined){pics.splice(+e.target.d
 $("lb").onclick=()=>$("lb").classList.remove("on");
 
 $("save").onclick=async()=>{
-  const title=$("f_title").value.trim();if(!title){$("f_title").focus();return}
+  const title=$("f_title").value.trim().toUpperCase();if(!title){$("f_title").focus();return}
   const id=editing?.id||("m"+Date.now().toString(36)+Math.random().toString(36).slice(2,5));
   const m={...(editing||{}),id,title,director:$("f_dir").value.trim(),year:$("f_year").value.replace(/\D/g,"").slice(0,4),fav:favState,images:pics,added:editing?.added||Date.now(),upd:Date.now()};
   try{await dbPut(m);upsert(m);status();render();closeForm()}catch(e){alert("Не удалось сохранить: "+(e.message||e))}
