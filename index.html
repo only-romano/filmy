@@ -8,7 +8,7 @@
 :root[data-theme="dark"]{--bg:#1a1714;--card:#25211d;--tx:#f0ebe3;--mu:#9d9388;--ac:#e8785a;--ln:#38322b;color-scheme:dark}
 *{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,Segoe UI,sans-serif;max-width:760px;margin:0 auto;padding:12px 14px 90px}
-h1{text-transform:uppercase;letter-spacing:.06em;font:600 22px Georgia,serif;margin:6px 0 2px}.top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}.mini{display:flex;gap:4px;margin-top:6px}.mini button{width:30px;height:30px;padding:0;border:1px solid var(--ln);background:var(--card);color:var(--mu);border-radius:8px;font-size:14px}.hrt{color:var(--tx);font-weight:400}.sub{color:var(--mu);font-size:13px;margin-bottom:12px}
+h1{text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;font:600 clamp(15px,4.6vw,22px) Georgia,serif;margin:6px 0 2px}.top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}.mini{display:flex;gap:4px;margin-top:6px}.mini button{width:30px;height:30px;padding:0;border:1px solid var(--ln);background:var(--card);color:var(--mu);border-radius:8px;font-size:14px}.hrt{color:var(--tx);font-weight:400}.sub{color:var(--mu);font-size:13px;margin-bottom:12px}
 .tabs{display:flex;gap:6px;margin:10px 0;overflow-x:auto}
 .tabs button{flex:none;border:1px solid var(--ln);background:var(--card);color:var(--tx);padding:8px 14px;border-radius:20px;font-size:14px}
 .tabs button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
@@ -30,7 +30,7 @@ input,select{width:100%;padding:11px;border:1px solid var(--ln);border-radius:10
 <div class="top"><h1>🎬 Дневник фильмов</h1><div class="mini"><button id="exp" title="Сохранить копию">💾</button><button id="imp" title="Загрузить копию">⬇</button></div></div>
 <div class="sub" id="st">Загрузка…</div>
 <input type="file" id="impf" accept=".json,application/json" hidden>
-<input id="q" placeholder="Поиск по названию, режиссёру, жанру">
+<input id="q" placeholder="Поиск по названию, режиссёру, году">
 <div class="tabs" id="tabs">
 <button data-t="log" class="on">Журнал</button><button data-t="year">По годам</button><button data-t="dir">По режиссёрам</button><button data-t="fav">♡︎ Любимые</button>
 </div>
