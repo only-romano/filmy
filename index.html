@@ -20,11 +20,11 @@ input,select{width:100%;padding:11px;border:1px solid var(--ln);border-radius:10
 .row{display:grid;grid-template-columns:1fr 90px;gap:8px}
 .grp{font:600 18px Georgia,serif;margin:18px 0 6px;color:var(--ac);display:flex;justify-content:space-between}.grp small{color:var(--mu);font:13px system-ui}
 .m{position:relative;background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:10px 12px;margin-bottom:6px;cursor:pointer}
-.m b{display:block;text-transform:uppercase}#f_title{text-transform:uppercase}.m span{color:var(--mu);font-size:13px}.m b{padding-right:36px}.m .hrt{position:absolute;right:12px;top:6px;font-size:28px;line-height:1;color:var(--tx)}.sug{position:absolute;left:0;right:0;top:100%;margin-top:-6px;background:var(--card);border:1px solid var(--ln);border-radius:10px;z-index:3;display:none;box-shadow:0 6px 16px #0003;max-height:180px;overflow:auto}.sug div{padding:11px 12px;border-bottom:1px solid var(--ln)}.sug div:last-child{border:0}
+.m b{display:block;text-transform:uppercase}#f_title{text-transform:uppercase}.m span{color:var(--mu);font-size:13px}.m b{padding-right:36px}.m .hrt{position:absolute;right:12px;top:6px;font-size:28px;line-height:1;color:var(--tx)}.m .chip{display:inline-block;border:1px solid var(--mu);border-radius:6px;padding:0 6px;margin-left:8px;font-size:10px;line-height:16px;letter-spacing:.08em;vertical-align:1px}.tl{font-size:12px;color:var(--mu);margin:-2px 0 4px}.mc{display:flex;justify-content:space-between;gap:10px;padding:7px 10px;border:1px dashed var(--mu);border-radius:8px;margin-bottom:5px;font-size:12px;color:var(--mu);pointer-events:none;user-select:none;-webkit-user-select:none}.mc b{color:var(--tx);text-transform:uppercase}.err{color:#d9534f;font-size:14px;margin:0 0 8px;display:none}.sug{position:absolute;left:0;right:0;top:100%;margin-top:-6px;background:var(--card);border:1px solid var(--ln);border-radius:10px;z-index:3;display:none;box-shadow:0 6px 16px #0003;max-height:180px;overflow:auto}.sug div{padding:11px 12px;border-bottom:1px solid var(--ln)}.sug div:last-child{border:0}
 .th{display:flex;gap:5px;margin-top:6px;overflow-x:auto}.th img{height:54px;width:54px;object-fit:cover;border-radius:8px}
 .fab{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--ac);color:#fff;border:0;width:58px;height:58px;border-radius:50%;font-size:30px;box-shadow:0 4px 14px #0004}
-.ov{position:fixed;inset:0;background:#0007;display:none;align-items:flex-end;justify-content:center;z-index:5}.ov.on{display:flex}
-.sheet{background:var(--bg);width:100%;max-width:560px;max-height:92%;overflow:auto;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.ov{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center;z-index:5;overscroll-behavior:contain}.ov.on{display:flex}
+.sheet{background:var(--bg);width:calc(100% - 24px);max-width:560px;max-height:88%;overflow:auto;border-radius:18px;padding:16px}
 .btn{border:0;border-radius:10px;padding:12px 16px;font-size:16px;background:var(--ac);color:#fff}.btn.g{background:var(--card);color:var(--tx);border:1px solid var(--ln)}.btn.d{background:none;color:#c0392b}
 .imgs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.imgs div{position:relative}.imgs img{width:84px;height:84px;object-fit:cover;border-radius:8px}
 .imgs i{position:absolute;top:-6px;right:-6px;background:#000b;color:#fff;border-radius:50%;width:22px;height:22px;text-align:center;font-style:normal;line-height:22px}
@@ -43,19 +43,20 @@ input,select{width:100%;padding:11px;border:1px solid var(--ln);border-radius:10
 
 <div class="ov" id="ov"><div class="sheet">
 <h2 id="ft" style="margin:0 0 10px;font-family:Georgia,serif">Новый фильм</h2>
-<input id="f_title" placeholder="Название">
+<input id="f_title" placeholder="Название" autocomplete="off"><div id="tsug"></div>
 <div class="row"><div style="position:relative"><input id="f_dir" placeholder="Режиссёр" autocomplete="off"><div class="sug" id="dsug"></div></div><input id="f_year" placeholder="Год" inputmode="numeric" maxlength="4"></div>
-<button type="button" class="btn g" id="f_fav" style="width:100%;margin-bottom:8px">♡︎ Любимый</button>
+<div style="display:flex;gap:8px;margin-bottom:8px"><button type="button" class="btn g" id="f_fav" style="flex:1">♡︎ Любимый</button><button type="button" class="btn g" id="f_ser" style="flex:1">Сериал</button></div>
 <div class="imgs" id="imgs"></div>
 <input type="file" id="file" accept="image/*" multiple hidden>
 <button class="btn g" id="pick" style="width:100%;margin-bottom:12px">📷 Прикрепить картинку</button>
+<div class="err" id="err"></div>
 <div style="display:flex;gap:8px"><button class="btn" id="save" style="flex:1">Сохранить</button><button class="btn g" id="cancel">Отмена</button></div>
 <button class="btn d" id="del" style="width:100%;margin-top:8px;display:none">Удалить запись</button>
 </div></div>
 <div class="ov" id="lb"><img id="lbi"></div>
 
 <script>
-let movies=[],favState=false,tab="log",editing=null,pics=[],idb=null;
+let movies=[],favState=false,serState=false,tab="log",editing=null,pics=[],idb=null;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const live=()=>movies.filter(m=>!m.deleted);
@@ -79,7 +80,7 @@ function render(){
   let a=live().filter(m=>(tab!=="fav"||m.fav)&&(!q||[m.title,m.director,m.year].join(" ").toLowerCase().includes(q)));
   const el=$("list");
   if(!a.length){el.innerHTML='<div class="empty">'+(live().length?(tab==="fav"&&!q?"Пока нет любимых. Откройте фильм и нажмите ♡︎":"Ничего не найдено"):"Пока пусто. Нажмите + и добавьте первый фильм")+"</div>";return}
-  const card=m=>`<div class="m" data-id="${esc(m.id)}"><b>${esc(m.title)}</b><span>${esc(m.year||"—")} · ${esc(m.director||"—")}</span>${m.fav?'<span class="hrt">♡︎</span>':""}${(m.images||[]).length?'<div class="th">'+m.images.map(s=>`<img src="${esc(s)}">`).join("")+"</div>":""}</div>`;
+  const card=m=>`<div class="m" data-id="${esc(m.id)}"><b>${esc(m.title)}</b><span>${esc(m.year||"—")} · ${esc(m.director||"—")}${m.series?'<span class="chip">СЕРИАЛ</span>':""}</span>${m.fav?'<span class="hrt">♡︎</span>':""}${(m.images||[]).length?'<div class="th">'+m.images.map(s=>`<img src="${esc(s)}">`).join("")+"</div>":""}</div>`;
   let h="";
   if(tab==="log"||tab==="fav"){a=[...a].sort((x,y)=>(y.added||0)-(x.added||0));h=a.map(card).join("")}
   else{
@@ -92,14 +93,14 @@ function render(){
   el.innerHTML=h;
 }
 function renderImgs(){$("imgs").innerHTML=pics.map((s,i)=>`<div><img src="${esc(s)}" data-v="${i}"><i data-x="${i}">×</i></div>`).join("")}
-function setFav(){const b=$("f_fav");b.textContent="♡︎ Любимый";b.style.background=favState?"var(--tx)":"";b.style.color=favState?"var(--bg)":""}
+function setFav(){[["f_fav",favState],["f_ser",serState]].forEach(([id,on])=>{const b=$(id);b.style.background=on?"var(--tx)":"";b.style.color=on?"var(--bg)":""})}
 function openForm(m){
   editing=m||null;pics=[...(m?.images||[])];
   $("ft").textContent=m?"Редактировать":"Новый фильм";
-  $("f_title").value=m?.title||"";$("f_dir").value=m?.director||"";$("dsug").style.display="none";$("f_year").value=m?.year||"";favState=!!m?.fav;setFav();
-  $("del").style.display=m?"block":"none";renderImgs();$("ov").classList.add("on");
+  $("f_title").value=m?.title||"";$("f_dir").value=m?.director||"";$("dsug").style.display="none";$("f_year").value=m?.year||"";favState=!!m?.fav;serState=!!m?.series;setFav();$("err").style.display="none";titleSug();
+  $("del").style.display=m?"block":"none";renderImgs();$("ov").classList.add("on");document.body.style.overflow="hidden";
 }
-const closeForm=()=>$("ov").classList.remove("on");
+const closeForm=()=>{$("ov").classList.remove("on");document.body.style.overflow=""};
 function shrink(file){return new Promise(res=>{const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{
   const k=Math.min(1,900/Math.max(i.width,i.height)),c=document.createElement("canvas");
   c.width=Math.round(i.width*k);c.height=Math.round(i.height*k);c.getContext("2d").drawImage(i,0,0,c.width,c.height);
@@ -112,8 +113,12 @@ $("lb").onclick=()=>$("lb").classList.remove("on");
 $("save").onclick=async()=>{
   const title=$("f_title").value.trim().toUpperCase();if(!title){$("f_title").focus();return}
   const id=editing?.id||("m"+Date.now().toString(36)+Math.random().toString(36).slice(2,5));
-  const m={...(editing||{}),id,title,director:$("f_dir").value.trim(),year:$("f_year").value.replace(/\D/g,"").slice(0,4),fav:favState,images:pics,added:editing?.added||Date.now(),upd:Date.now()};
-  try{await dbPut(m);upsert(m);status();render();closeForm()}catch(e){alert("Не удалось сохранить: "+(e.message||e))}
+  const dir=$("f_dir").value.trim(),yr=$("f_year").value.replace(/\D/g,"").slice(0,4);
+  const k=(t,y,d)=>[t,y,d].map(x=>String(x||"").trim().toLowerCase()).join("|");
+  if(live().some(x=>x.id!==id&&k(x.title,x.year,x.director)===k(title,yr,dir))){const e=$("err");e.textContent="Такой фильм уже есть в списке (то же название, год и режиссёр)";e.style.display="block";return}
+  const isNew=!editing;
+  const m={...(editing||{}),id,title,director:dir,year:yr,fav:favState,series:serState,images:pics,added:editing?.added||Date.now(),upd:Date.now()};
+  try{await dbPut(m);upsert(m);status();render();closeForm();if(isNew)window.scrollTo({top:0,behavior:"smooth"})}catch(e){alert("Не удалось сохранить: "+(e.message||e))}
 };
 $("del").onclick=async()=>{
   if(!editing||!confirm("Удалить «"+editing.title+"»?"))return;
@@ -125,8 +130,15 @@ function sugShow(){const v=$("f_dir").value.trim().toLowerCase(),b=$("dsug");
   const hit=n=>{n=n.toLowerCase();if(n===v)return 0;if(n.startsWith(v))return 1;for(let i=1;i<n.length;i++)if(/[\s\-.]/.test(n[i-1])&&n.startsWith(v,i))return 2;return 0};
   const r=v?directors().map(d=>({d,h:hit(d.n)})).filter(x=>x.h).sort((x,y)=>x.h-y.h).map(x=>x.d).slice(0,6):[];
   b.innerHTML=r.map(d=>`<div data-n="${esc(d.n)}">${esc(d.n)}</div>`).join("");b.style.display=r.length?"block":"none"}
-$("f_dir").oninput=sugShow;$("f_dir").onblur=()=>setTimeout(()=>$("dsug").style.display="none",150);
-$("dsug").addEventListener("pointerdown",e=>{const n=e.target.dataset.n;if(!n)return;e.preventDefault();$("f_dir").value=n;$("dsug").style.display="none"});
+$("f_dir").oninput=sugShow;$("f_dir").onblur=()=>setTimeout(()=>$("dsug").style.display="none",300);
+$("dsug").addEventListener("mousedown",e=>e.preventDefault());
+$("dsug").addEventListener("click",e=>{const n=e.target.dataset.n;if(!n)return;e.preventDefault();e.stopPropagation();$("f_dir").value=n;$("dsug").style.display="none"});
+function titleSug(){const v=$("f_title").value.trim().toLowerCase(),b=$("tsug");
+  const r=!v?[]:live().filter(m=>m.id!==editing?.id).filter(m=>{const t=(m.title||"").toLowerCase();return v.length>3?t.startsWith(v):t===v}).slice(0,4);
+  b.innerHTML=r.length?'<div class="tl">Уже есть в списке:</div>'+r.map(m=>`<div class="mc"><b>${esc(m.title)}</b><span>${esc(m.year||"—")} · ${esc(m.director||"—")}${m.series?" · сериал":""}</span></div>`).join(""):""}
+$("f_title").oninput=()=>{titleSug();$("err").style.display="none"};
+$("f_dir").addEventListener("input",()=>$("err").style.display="none");$("f_year").addEventListener("input",()=>$("err").style.display="none");
+$("f_ser").onclick=()=>{serState=!serState;setFav()};
 $("f_fav").onclick=()=>{favState=!favState;setFav()};
 $("cancel").onclick=closeForm;$("add").onclick=()=>openForm();$("q").oninput=render;
 $("tabs").onclick=e=>{const t=e.target.dataset.t;if(!t)return;tab=t;[...$("tabs").children].forEach(b=>b.classList.toggle("on",b===e.target));render()};
