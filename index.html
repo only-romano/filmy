@@ -43,8 +43,8 @@ input,select{width:100%;padding:11px;border:1px solid var(--ln);border-radius:10
 
 <div class="ov" id="ov"><div class="sheet">
 <h2 id="ft" style="margin:0 0 10px;font-family:Georgia,serif">Новый фильм</h2>
-<input id="f_title" placeholder="Название" autocomplete="off"><div id="tsug"></div>
-<div class="row"><div style="position:relative"><input id="f_dir" placeholder="Режиссёр" autocomplete="off"><div class="sug" id="dsug"></div></div><input id="f_year" placeholder="Год" inputmode="numeric" maxlength="4"></div>
+<input id="f_title" placeholder="Название" autocorrect="on" spellcheck="true" autocapitalize="sentences"><div id="tsug"></div>
+<div class="row"><div style="position:relative"><input id="f_dir" placeholder="Режиссёр" autocorrect="on" spellcheck="true" autocapitalize="words"><div class="sug" id="dsug"></div></div><input id="f_year" placeholder="Год" inputmode="numeric" maxlength="4"></div>
 <div style="display:flex;gap:8px;margin-bottom:8px"><button type="button" class="btn g" id="f_fav" style="flex:1">♡︎ Любимый</button><button type="button" class="btn g" id="f_ser" style="flex:1">Сериал</button></div>
 <div class="imgs" id="imgs"></div>
 <input type="file" id="file" accept="image/*" multiple hidden>
@@ -130,13 +130,13 @@ function sugShow(){const v=$("f_dir").value.trim().toLowerCase(),b=$("dsug");
   const hit=n=>{n=n.toLowerCase();if(n===v)return 0;if(n.startsWith(v))return 1;for(let i=1;i<n.length;i++)if(/[\s\-.]/.test(n[i-1])&&n.startsWith(v,i))return 2;return 0};
   const r=v?directors().map(d=>({d,h:hit(d.n)})).filter(x=>x.h).sort((x,y)=>x.h-y.h).map(x=>x.d).slice(0,6):[];
   b.innerHTML=r.map(d=>`<div data-n="${esc(d.n)}">${esc(d.n)}</div>`).join("");b.style.display=r.length?"block":"none"}
-$("f_dir").oninput=sugShow;$("f_dir").onblur=()=>setTimeout(()=>$("dsug").style.display="none",300);
+["input","change","keyup","compositionend"].forEach(ev=>$("f_dir").addEventListener(ev,sugShow));$("f_dir").onblur=()=>setTimeout(()=>$("dsug").style.display="none",300);
 $("dsug").addEventListener("mousedown",e=>e.preventDefault());
 $("dsug").addEventListener("click",e=>{const n=e.target.dataset.n;if(!n)return;e.preventDefault();e.stopPropagation();$("f_dir").value=n;$("dsug").style.display="none"});
 function titleSug(){const v=$("f_title").value.trim().toLowerCase(),b=$("tsug");
   const r=!v?[]:live().filter(m=>m.id!==editing?.id).filter(m=>{const t=(m.title||"").toLowerCase();return v.length>3?t.startsWith(v):t===v}).slice(0,4);
   b.innerHTML=r.length?'<div class="tl">Уже есть в списке:</div>'+r.map(m=>`<div class="mc"><b>${esc(m.title)}</b><span>${esc(m.year||"—")} · ${esc(m.director||"—")}${m.series?" · сериал":""}</span></div>`).join(""):""}
-$("f_title").oninput=()=>{titleSug();$("err").style.display="none"};
+["input","change","keyup","compositionend"].forEach(ev=>$("f_title").addEventListener(ev,()=>{titleSug();$("err").style.display="none"}));
 $("f_dir").addEventListener("input",()=>$("err").style.display="none");$("f_year").addEventListener("input",()=>$("err").style.display="none");
 $("f_ser").onclick=()=>{serState=!serState;setFav()};
 $("f_fav").onclick=()=>{favState=!favState;setFav()};
